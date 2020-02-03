@@ -18,13 +18,29 @@ var (
 
   verisignUnzip bool
   verisignUnzipPath string
+
+  extractDomains bool
+  extractDomainsOnly bool
+  extractPath string
 )
+
+func ExtractDomains(){
+  log.Printf("Extracting domains from %v to %v", verisignUnzipPath, extractPath)
+  unzippedFile := pkg.FileOpenPanic(verisignUnzipPath)
+  extractFile := pkg.FileCreateOrOpenForAppend(extractPath)
+  pkg.ExtractDomains(verisignZone, unzippedFile, extractFile)
+  log.Print("Done extracting domains!")
+}
 
 var rootCmd = &cobra.Command{
   Use:   "verisignftp",
   Short: "Download and unzip from verisign ftp servers",
   Run: func(cmd *cobra.Command, args []string) {
 
+    if extractDomainsOnly == true {
+      ExtractDomains()
+      return
+    }
     downloadPath := pkg.FileCreatePanic(verisignDownloadPath)
 
     // check if we can create unzip path
@@ -43,6 +59,9 @@ var rootCmd = &cobra.Command{
     if verisignUnzip == true {
       pkg.UnzipFile(pkg.FileOpenPanic(verisignDownloadPath), pkg.FileCreatePanic(verisignUnzipPath))
     }
+    if extractDomains == true {
+      ExtractDomains()
+    }
   },
 }
 
@@ -54,6 +73,7 @@ func Execute() {
 }
 
 func init() {
+  // #TODO user = a, pass = b, downloadpath =c, unzippath = d ...
   rootCmd.PersistentFlags().BoolVarP(&verisignUnzip, "unzip", "x", false, "unzip after downloading?")
 
   rootCmd.PersistentFlags().StringVarP(&verisignLogin, "user", "u", "", "ftp user")
@@ -66,5 +86,9 @@ func init() {
 
   rootCmd.PersistentFlags().StringVarP(&verisignDownloadPath, "downloadpath", "d", "com.zone.gz", "where to download")
   rootCmd.PersistentFlags().StringVarP(&verisignUnzipPath, "unzippath", "i", "com.zone", "where to unzip")
+  rootCmd.PersistentFlags().StringVarP(&extractPath, "extractpath", "k", "com.zone.domains", "where to extract domains")
+
+  rootCmd.PersistentFlags().BoolVarP(&extractDomains, "extract", "e", false, "extract domain names after unzipping")
+  rootCmd.PersistentFlags().BoolVarP(&extractDomainsOnly, "extractonly", "o", false, "only extract domains from unzipppath")
 
 }

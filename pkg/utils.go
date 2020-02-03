@@ -22,6 +22,15 @@ func FileCreatePanic(name string) *os.File {
 	}
 }
 
+func FileCreateOrOpenForAppend(name string) *os.File {
+	if file, err := os.OpenFile(name, os.O_APPEND|os.O_CREATE, 0666); err == nil {
+		return file
+	} else {
+		log.Fatal(err)
+		return nil
+	}
+}
+
 func FileOpenPanic(name string) *os.File {
 	if file, err := os.Open(name); err == nil {
 		return file
@@ -56,4 +65,13 @@ func GzipReaderPanic(file *os.File) *gzip.Reader {
 		log.Fatalf("%v %v", "Error gzip reader", err)
 		return nil
 	}
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }
